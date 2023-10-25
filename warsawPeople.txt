@@ -1,0 +1,2 @@
+Person{name='Jan', city='Warsaw', age=30}
+Person{name='Weronika', city='Warsaw', age=20}
