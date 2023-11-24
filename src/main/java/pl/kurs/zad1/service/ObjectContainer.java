@@ -1,19 +1,26 @@
 package pl.kurs.zad1.service;
 
-import pl.kurs.zad1.models.Person;
+import com.google.gson.reflect.TypeToken;
 
 import java.io.*;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.nio.file.Files;
+import java.nio.file.LinkOption;
+import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
-public class ObjectContainer<T> {
+public class ObjectContainer<T extends Serializable> {
 
     private Node<T> head;
     private Predicate<T> condition;
 
-    private static class Node<T> {
+    private static class Node<T> implements Serializable {
         T data;
         Node<T> next;
 
@@ -73,10 +80,13 @@ public class ObjectContainer<T> {
                 current = current.next;
             }
         }
+
     }
 
     public void storeToFile(String fileName) throws IOException {
-        storeToFile(fileName, obj -> true, obj -> obj.toString());
+        try (ObjectOutputStream outputStream = new ObjectOutputStream(new FileOutputStream(fileName))) {
+            outputStream.writeObject(head);
+        }
     }
 
     public void storeToFile(String fileName, Predicate<T> filter, Function<T, String> formatter) throws IOException {
@@ -91,29 +101,16 @@ public class ObjectContainer<T> {
         }
     }
 
-    public static <T> ObjectContainer<T> fromFile(String fileName) throws IOException {
-        ObjectContainer<T> container = new ObjectContainer<>(obj -> true);
 
-        try (BufferedReader reader = new BufferedReader(new FileReader(fileName))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                T obj = null;
-
-                if (line.contains(";")) {
-                    String[] parts = line.split(";");
-                    if (parts.length == 3) {
-                        obj = (T) new Person(parts[0], parts[2], Integer.parseInt(parts[1]));
-                    }
-                }
-                if (obj != null) {
-                    container.add(obj);
-                }
-            }
+    public static <U extends Serializable> ObjectContainer<U> fromFile(String fileName) {
+        ObjectContainer<U> container = new ObjectContainer<>(obj -> true);
+        try (ObjectInputStream inputStream = new ObjectInputStream(new FileInputStream(fileName))) {
+            container.head = (Node) inputStream.readObject();
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
         }
-
         return container;
     }
-
 
     @Override
     public String toString() {
@@ -126,3 +123,63 @@ public class ObjectContainer<T> {
         return sb.toString();
     }
 }
+
+
+
+
+    /*public static <T> ObjectContainer<T> fromFile(String fileName) throws IOException, ClassNotFoundException, NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
+        String commentAttribute = (String) Files.getAttribute(Paths.get(fileName), "comment", LinkOption.NOFOLLOW_LINKS);*/
+//        Class<?> clazz = Class.forName(commentAttribute);
+
+//        try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(fileName))) {
+//            ObjectContainer<Class> container  = ois.readObject();
+//        }
+//        return container;
+
+      /*  Class aClass = Class.forName(commentAttribute);
+        //TypeToken<T> typeToken = new TypeToken<T>(aClass.getClass()) {};
+        //this.type = (Class<T>) typeToken.getRawType();
+        //Constructor[] constructors = aClass.getConstructors();
+        Field[] declaredFields = aClass.getDeclaredFields();
+        Class[] fieldTypesArray = new Class[declaredFields.length];
+        for (int i = 0; i < declaredFields.length; i++) {
+            fieldTypesArray[i] = declaredFields[i].getClass();
+
+        }
+        Constructor constructor = aClass.getConstructor(fieldTypesArray);
+
+//        MyObject myObject = (MyObject)
+//                constructor.newInstance("constructor-arg1");
+        ObjectContainer<T> objectContainer = new ObjectContainer<>();
+
+        try (
+                BufferedReader br = new BufferedReader(new FileReader(fileName))
+        ) {
+            String line = null;
+            while ((line = br.readLine()) != null) {
+                Object[] args = line.split(";");
+                objectContainer.add((T) constructor.newInstance(args));
+            }
+
+        }
+        return objectContainer;
+    }
+
+*/
+//*/
+//    public static <T> ObjectContainer<T> fromFile(String fileName, Function<String, T> converter) throws IOException, ClassNotFoundException {
+//        String commentAttribute = (String) Files.getAttribute(Paths.get(fileName), "comment", LinkOption.NOFOLLOW_LINKS);
+//        Class<?> clazz = Class.forName(commentAttribute);
+//        ObjectContainer<> container = new ObjectContainer<>(obj -> true);
+//        try (BufferedReader reader = new BufferedReader(new FileReader(fileName))) {
+//            String line;
+//            while ((line = reader.readLine()) != null) {
+//                T obj = converter.apply(line);
+//                container.add(obj);
+//            }
+//        }
+//        return container;
+//    }
+
+
+

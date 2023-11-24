@@ -12,7 +12,7 @@
   </component>
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
-      <module name="TestNr4" options="--add-exports java.base/jdk.internal.logger=ALL-UNNAMED --add-exports java.base/jdk.internal.module=ALL-UNNAMED" />
+      <module name="TestNr4" options="" />
     </option>
   </component>
 </project>

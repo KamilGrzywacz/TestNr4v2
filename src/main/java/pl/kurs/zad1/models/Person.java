@@ -1,6 +1,8 @@
 package pl.kurs.zad1.models;
 
-public class Person {
+import java.io.Serializable;
+
+public class Person implements Serializable {
     private String name;
     private String city;
     private int age;
@@ -23,6 +25,17 @@ public class Person {
         return age;
     }
 
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void setCity(String city) {
+        this.city = city;
+    }
+
+    public void setAge(int age) {
+        this.age = age;
+    }
 
     @Override
     public String toString() {
