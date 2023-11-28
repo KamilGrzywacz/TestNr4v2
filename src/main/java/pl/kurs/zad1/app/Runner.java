@@ -27,6 +27,7 @@ public class Runner {
         peopleFromWarsaw.storeToFile("youngPeopleFromWarsaw.txt", p -> p.getAge() < 30, p -> p.getName() + ";" + p.getAge() + ";" + p.getCity());
         peopleFromWarsaw.storeToFile("warsawPeople.txt");
         ObjectContainer<Person> peopleFromWarsawFromFile = ObjectContainer.fromFile("warsawPeople.txt");
+        System.out.println("peopleFromWarsawFromFile = " + peopleFromWarsawFromFile);
 
 
     }

@@ -1,24 +1,15 @@
 package pl.kurs.zad1.service;
 
-import com.google.gson.reflect.TypeToken;
-
 import java.io.*;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.nio.file.Files;
-import java.nio.file.LinkOption;
-import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
-public class ObjectContainer<T extends Serializable> {
+public class ObjectContainer<T extends Serializable> implements Serializable {
 
     private Node<T> head;
-    private Predicate<T> condition;
+    private SerializablePredicate<T> serializedPredicate;
 
     private static class Node<T> implements Serializable {
         T data;
@@ -30,16 +21,29 @@ public class ObjectContainer<T extends Serializable> {
         }
     }
 
+    public static class SerializablePredicate<T> implements Predicate<T>, Serializable {
+        private transient Predicate<T> predicate;
+
+        public SerializablePredicate(Predicate<T> predicate) {
+            this.predicate = predicate;
+        }
+
+        @Override
+        public boolean test(T t) {
+            return predicate.test(t);
+        }
+    }
+
     public ObjectContainer() {
-        this.condition = obj -> true;
+        this.serializedPredicate = new SerializablePredicate<>(obj -> true);
     }
 
     public ObjectContainer(Predicate<T> condition) {
-        this.condition = condition;
+        this.serializedPredicate = new SerializablePredicate<>(condition);
     }
 
     public boolean add(T object) {
-        if (!condition.test(object)) {
+        if (object == null || !serializedPredicate.test(object)) {
             return false;
         }
         Node<T> newNode = new Node<>(object);
@@ -54,6 +58,7 @@ public class ObjectContainer<T extends Serializable> {
         }
         return true;
     }
+
 
     public List<T> getWithFilter(Predicate<T> filter) {
         List<T> resultList = new ArrayList<>();
@@ -85,6 +90,7 @@ public class ObjectContainer<T extends Serializable> {
 
     public void storeToFile(String fileName) throws IOException {
         try (ObjectOutputStream outputStream = new ObjectOutputStream(new FileOutputStream(fileName))) {
+            outputStream.writeObject(serializedPredicate);
             outputStream.writeObject(head);
         }
     }
@@ -101,11 +107,11 @@ public class ObjectContainer<T extends Serializable> {
         }
     }
 
-
     public static <U extends Serializable> ObjectContainer<U> fromFile(String fileName) {
-        ObjectContainer<U> container = new ObjectContainer<>(obj -> true);
+        ObjectContainer<U> container = new ObjectContainer<>();
         try (ObjectInputStream inputStream = new ObjectInputStream(new FileInputStream(fileName))) {
-            container.head = (Node) inputStream.readObject();
+            container.serializedPredicate = (SerializablePredicate<U>) inputStream.readObject();
+            container.head = (Node<U>) inputStream.readObject();
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
         }
@@ -124,62 +130,6 @@ public class ObjectContainer<T extends Serializable> {
     }
 }
 
-
-
-
-    /*public static <T> ObjectContainer<T> fromFile(String fileName) throws IOException, ClassNotFoundException, NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
-        String commentAttribute = (String) Files.getAttribute(Paths.get(fileName), "comment", LinkOption.NOFOLLOW_LINKS);*/
-//        Class<?> clazz = Class.forName(commentAttribute);
-
-//        try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(fileName))) {
-//            ObjectContainer<Class> container  = ois.readObject();
-//        }
-//        return container;
-
-      /*  Class aClass = Class.forName(commentAttribute);
-        //TypeToken<T> typeToken = new TypeToken<T>(aClass.getClass()) {};
-        //this.type = (Class<T>) typeToken.getRawType();
-        //Constructor[] constructors = aClass.getConstructors();
-        Field[] declaredFields = aClass.getDeclaredFields();
-        Class[] fieldTypesArray = new Class[declaredFields.length];
-        for (int i = 0; i < declaredFields.length; i++) {
-            fieldTypesArray[i] = declaredFields[i].getClass();
-
-        }
-        Constructor constructor = aClass.getConstructor(fieldTypesArray);
-
-//        MyObject myObject = (MyObject)
-//                constructor.newInstance("constructor-arg1");
-        ObjectContainer<T> objectContainer = new ObjectContainer<>();
-
-        try (
-                BufferedReader br = new BufferedReader(new FileReader(fileName))
-        ) {
-            String line = null;
-            while ((line = br.readLine()) != null) {
-                Object[] args = line.split(";");
-                objectContainer.add((T) constructor.newInstance(args));
-            }
-
-        }
-        return objectContainer;
-    }
-
-*/
-//*/
-//    public static <T> ObjectContainer<T> fromFile(String fileName, Function<String, T> converter) throws IOException, ClassNotFoundException {
-//        String commentAttribute = (String) Files.getAttribute(Paths.get(fileName), "comment", LinkOption.NOFOLLOW_LINKS);
-//        Class<?> clazz = Class.forName(commentAttribute);
-//        ObjectContainer<> container = new ObjectContainer<>(obj -> true);
-//        try (BufferedReader reader = new BufferedReader(new FileReader(fileName))) {
-//            String line;
-//            while ((line = reader.readLine()) != null) {
-//                T obj = converter.apply(line);
-//                container.add(obj);
-//            }
-//        }
-//        return container;
-//    }
 
 
 
