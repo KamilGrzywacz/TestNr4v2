@@ -9,7 +9,12 @@ import java.util.function.Predicate;
 public class ObjectContainer<T extends Serializable> implements Serializable {
 
     private Node<T> head;
-    private SerializablePredicate<T> serializedPredicate;
+    private MyPredicate<T> serializedPredicate;
+
+    public ObjectContainer() {
+
+    }
+
 
     private static class Node<T> implements Serializable {
         T data;
@@ -21,25 +26,8 @@ public class ObjectContainer<T extends Serializable> implements Serializable {
         }
     }
 
-    public static class SerializablePredicate<T> implements Predicate<T>, Serializable {
-        private transient Predicate<T> predicate;
-
-        public SerializablePredicate(Predicate<T> predicate) {
-            this.predicate = predicate;
-        }
-
-        @Override
-        public boolean test(T t) {
-            return predicate.test(t);
-        }
-    }
-
-    public ObjectContainer() {
-        this.serializedPredicate = new SerializablePredicate<>(obj -> true);
-    }
-
     public ObjectContainer(Predicate<T> condition) {
-        this.serializedPredicate = new SerializablePredicate<>(condition);
+        this.serializedPredicate = new MyPredicate<>();
     }
 
     public boolean add(T object) {
@@ -88,6 +76,12 @@ public class ObjectContainer<T extends Serializable> implements Serializable {
 
     }
 
+    //    public void storeToFile(String fileName) throws IOException {
+//        try (ObjectOutputStream outputStream = new ObjectOutputStream(new FileOutputStream(fileName))) {
+//            outputStream.writeObject(serializedPredicate);
+//            outputStream.writeObject(head);
+//        }
+//    }
     public void storeToFile(String fileName) throws IOException {
         try (ObjectOutputStream outputStream = new ObjectOutputStream(new FileOutputStream(fileName))) {
             outputStream.writeObject(serializedPredicate);
@@ -110,7 +104,8 @@ public class ObjectContainer<T extends Serializable> implements Serializable {
     public static <U extends Serializable> ObjectContainer<U> fromFile(String fileName) {
         ObjectContainer<U> container = new ObjectContainer<>();
         try (ObjectInputStream inputStream = new ObjectInputStream(new FileInputStream(fileName))) {
-            container.serializedPredicate = (SerializablePredicate<U>) inputStream.readObject();
+            MyPredicate<U> predicate = (MyPredicate<U>) inputStream.readObject();
+            container.serializedPredicate = predicate;
             container.head = (Node<U>) inputStream.readObject();
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
@@ -129,6 +124,7 @@ public class ObjectContainer<T extends Serializable> implements Serializable {
         return sb.toString();
     }
 }
+
 
 
 
