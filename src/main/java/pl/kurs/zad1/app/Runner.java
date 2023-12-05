@@ -29,6 +29,5 @@ public class Runner {
         ObjectContainer<Person> peopleFromWarsawFromFile = ObjectContainer.fromFile("warsawPeople.txt");
         System.out.println("peopleFromWarsawFromFile = " + peopleFromWarsawFromFile);
 
-
     }
 }

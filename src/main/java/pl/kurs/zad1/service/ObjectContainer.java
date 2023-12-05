@@ -10,11 +10,11 @@ public class ObjectContainer<T extends Serializable> implements Serializable {
 
     private Node<T> head;
     private MyPredicate<T> serializedPredicate;
+    private Predicate<T> condition;
 
     public ObjectContainer() {
 
     }
-
 
     private static class Node<T> implements Serializable {
         T data;
@@ -25,13 +25,26 @@ public class ObjectContainer<T extends Serializable> implements Serializable {
             this.next = null;
         }
     }
-
     public ObjectContainer(Predicate<T> condition) {
+        this.condition = condition;
         this.serializedPredicate = new MyPredicate<>();
     }
 
+    private ObjectContainer(MyPredicate<T> serializedPredicate) {
+        this.serializedPredicate = serializedPredicate;
+    }
+
+
+//    public ObjectContainer(Predicate<T> condition) {
+//        this.serializedPredicate = new MyPredicate<>();
+//    }
+//
+//    public ObjectContainer(Predicate<T> condition) {
+//        this.condition = condition;
+//    }
+
     public boolean add(T object) {
-        if (object == null || !serializedPredicate.test(object)) {
+        if (object == null || (condition != null && !condition.test(object))) {
             return false;
         }
         Node<T> newNode = new Node<>(object);
@@ -76,12 +89,7 @@ public class ObjectContainer<T extends Serializable> implements Serializable {
 
     }
 
-    //    public void storeToFile(String fileName) throws IOException {
-//        try (ObjectOutputStream outputStream = new ObjectOutputStream(new FileOutputStream(fileName))) {
-//            outputStream.writeObject(serializedPredicate);
-//            outputStream.writeObject(head);
-//        }
-//    }
+
     public void storeToFile(String fileName) throws IOException {
         try (ObjectOutputStream outputStream = new ObjectOutputStream(new FileOutputStream(fileName))) {
             outputStream.writeObject(serializedPredicate);
@@ -123,9 +131,7 @@ public class ObjectContainer<T extends Serializable> implements Serializable {
         }
         return sb.toString();
     }
+    public static <U extends Serializable> ObjectContainer<U> createContainerWithSerializedPredicate(MyPredicate<U> serializedPredicate) {
+        return new ObjectContainer<>(serializedPredicate);
+    }
 }
-
-
-
-
-
